@@ -14,13 +14,14 @@ import {
 } from "@/components/ui/avatar"
 import { DropdownMenuLabel, DropdownMenuSeparator } from "@radix-ui/react-dropdown-menu"
 import NavItems from "./NavItems"
+import { signOut } from "@/lib/actions/auth.actions"
 
-const UserDropdown = () => {
+const UserDropdown = ({user} : {user : User}) => {
     const router = useRouter();
     const handleSignOut = async () => {
+        await signOut();
         router.push("/sign-in");
     }
-    const user = {name : 'Shivam', email: 'kapoorshivam7178@gmail.com' };
   return (
     <DropdownMenu>
       <DropdownMenuTrigger>
