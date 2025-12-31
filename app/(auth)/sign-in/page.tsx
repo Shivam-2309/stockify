@@ -5,8 +5,12 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import InputField from "@/components/forms/InputField"
 import AuthFooter from "@/components/forms/AuthFooter"
+import {useRouter} from "next/navigation"
+import { signInWithEmail} from "@/lib/actions/auth.actions"
+import { toast } from "sonner";
 
 const SignIn = () => {
+  const router = useRouter();
   const {
     register,
     handleSubmit,
@@ -19,13 +23,17 @@ const SignIn = () => {
     mode: "onBlur",
   })
 
-  const onSubmit = async (data: SignInFormData) => {
-    try {
-      console.log("SignIn Data", data)
-      // TODO: call your sign-in API / action here
-    } catch (e) {
-      console.error(e)
-    }
+  const onSubmit = async (data : SignInFormData) => {
+      try {
+          // console.log("Data", data);
+          const result = await signInWithEmail(data);
+          if(result.success) router.push('/');
+      } catch(e) {
+          console.error(e);
+          toast.error('Sign in failed', {
+              description: e instanceof Error ? e.message : 'Failed to sign in'   
+          });
+      }
   }
 
   return (
