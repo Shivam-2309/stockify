@@ -50,7 +50,7 @@ const WatchListPage = () => {
 
 
     {open && (
-    <div className="mb-6 max-w-md rounded-xl border border-gray-200 bg-blue-800 p-4 shadow-lg">
+    <div className="mb-6 max-w-md rounded-xl border border-gray-200 bg-blue-950 p-4 shadow-lg">
         <input
         value={stockName}
         onChange={e => setStockName(e.target.value)}
@@ -76,9 +76,30 @@ const WatchListPage = () => {
     )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {items.map(item => (
-          <StockCard key={item._id} stockName={item.stockName} />
-        ))}
+      {items.map(item => (
+        <div key={item._id} className="relative">
+          <StockCard stockName={item.stockName} />
+          <Button
+            variant="destructive"
+            size="sm"
+            className="absolute top-2 right-2"
+            onClick={async () => {
+              const res = await fetch(`/api/watchlist/${item._id}`, {
+                method: "DELETE",
+              });
+
+              if (res.ok) {
+                setItems(prev => prev.filter(i => i._id !== item._id));
+              } else {
+                const data = await res.json();
+                alert(data.error || "Failed to delete");
+              }
+            }}
+          >
+            Delete
+          </Button>
+        </div>
+      ))}
       </div>
     </div>
   )
