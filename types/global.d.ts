@@ -4,6 +4,11 @@ declare global {
         password: string;
     };
 
+    type WatchItem = {
+        _id : string;
+        stockName : string;
+    }
+
     type SignUpFormData = {
         fullName: string;
         email: string;
