@@ -67,8 +67,19 @@ export default function SearchStockPage() {
     }
   };
 
-  const handleAddToWatchlist = (stock: FinnhubSearchResult) => {
-    console.log("Add to watchlist:", stock);
+  const handleAddToWatchlist = async (stock: FinnhubSearchResult) => {
+    const res = await fetch("/api/watchlist", {
+        method: "POST",
+        headers: { "Content-Type" : "application/json" },
+        // object literal ke andr sirf key value pair hi aa skti h.
+        body: JSON.stringify({ stockName : stock.description }),
+    });
+
+    console.log("Result: ", res);
+
+    if(!res.ok){
+      alert("Unable to put it in your watchlist");   
+    }
   };
 
   return (
@@ -143,11 +154,6 @@ export default function SearchStockPage() {
               >
                 Add to watchlist
               </Button>
-            <Link href={`/search/${stock.symbol}`}>
-                <Button variant="outline" size="sm" className="ml-5">
-                    View chart
-                </Button>
-            </Link>
             </CardFooter>
           </Card>
         ))}
