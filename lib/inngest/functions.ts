@@ -29,7 +29,7 @@ export const sendSignUpEmail = inngest.createFunction(
 
         await step.run('send-welcome-email', async () => {
             const part = response.candidates?.[0]?.content?.parts?.[0];
-            const introText = (part && 'text' in part ? part.text : null) || 'Welcome to signalist now you have full path to properly analyse and make better financial decisions'
+            const introText = (part && 'text' in part ? part.text : null) || 'Welcome to seeStock now you have full path to properly analyse and make better financial decisions'
             
             const {data : {email, name}} = event;
             return await sendWelcomeEmail({

@@ -13,14 +13,14 @@ const layout = async ({children} : {children : React.ReactNode}) => {
     <main className='auth-layout'>
         <section className='auth-left-section scrollbar-hide-default'>
             <Link href = "/" className='auth-logo'>
-                <Image src = "/assets/icons/logo.svg" alt = "signalist logo" width = {140} height = {32} className = "h-8 w-auto" />
+                <Image src = "/assets/icons/logo.svg" alt = "seeStock logo" width = {140} height = {32} className = "h-8 w-auto" />
             </Link >
             <div className='pb-6 lg:pb-8 flex-1'>{ children }</div>
         </section>
         <section className='auth-right-section'>
             <div className='z-10 relative lg:mt-2 lg:mb-16'>
                 <blockquote className='auth-blockquote'>
-                    Signalist turned my watchilst into a winning list, and I have had a wonderful experience in using signalist 
+                    seeStock turned my watchilst into a winning list, and I have had a wonderful experience in using seeStock 
                     and making my financial decisions wonderful
                 </blockquote>
                 <div className='flex items-center justify-between'>
