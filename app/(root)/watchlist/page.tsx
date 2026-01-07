@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { StockCard } from "@/components/StockCard";
 
-const WatchListPage = () => {
+const WatchListPage = (props : FinnhubSearchResult[]) => {
   const [items, setItems] = useState<WatchItem[]>([]);
   const [open, setOpen] = useState(false);
   const [stockName, setStockName] = useState("");
