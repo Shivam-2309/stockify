@@ -8,7 +8,7 @@ const Header = ({ user } : any) => {
     <header className='sticky top-0 header'>
       <div className='container header-wrapper'>
         <Link href = "/">
-          <Image src="/assets/icons/logo.svg" alt="Signalist Logo" width={140} height={32} className="h-8 w-auto cursor-pointer"></Image>
+          <Image src="/assets/icons/logo.svg" alt="seeStock Logo" width={140} height={32} className="h-8 w-auto cursor-pointer"></Image>
         </Link>
         {/* only shown on small devices where it would be a block */}
         <nav className="hidden sm:block">
