@@ -12,7 +12,7 @@ import {
   CardContent,
   CardFooter,
 } from "@/components/ui/card";
-import { Search } from "lucide-react";
+import { Search, Loader2, Info, Plus } from "lucide-react";
 
 type FinnhubSearchResult = {
   description: string; 
@@ -21,12 +21,58 @@ type FinnhubSearchResult = {
   type: string; 
 };
 
+type StockInfo = {
+  data?: any;
+  error?: string;
+  loading?: boolean;
+};
+
 export default function SearchStockPage() {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<FinnhubSearchResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fetched, setFetched] = useState(false);
+  
+  // Per-stock info state
+  const [stockInfos, setStockInfos] = useState<Record<string, StockInfo>>({});
+
+  const getInfo = async (stock: FinnhubSearchResult): Promise<void> => {
+    const symbol = stock.symbol;
+    
+    // Set loading state for this specific stock
+    setStockInfos(prev => ({
+      ...prev,
+      [symbol]: { loading: true }
+    }));
+
+    try {
+      const res = await fetch("/api/getinfo", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          stockName: symbol,
+          description: stock.description 
+        }),
+      });
+
+      if (res.ok) {
+        const data = await res.json(); 
+        setStockInfos(prev => ({
+          ...prev,
+          [symbol]: { data: data.aiAnalysis }
+        }));
+      } else {
+        throw new Error(`HTTP error! status: ${res.status}`); 
+      }
+    } catch (error) {
+      console.error("GetInfo error:", error);
+      setStockInfos(prev => ({
+        ...prev,
+        [symbol]: { error: "Failed to fetch info" }
+      }));
+    }
+  };
 
   const handleSearch = async () => {
     const trimmed = query.trim();
@@ -45,11 +91,11 @@ export default function SearchStockPage() {
       )}&token=${apiKey}`;
 
       const res = await fetch(url);
-      console.log("Res: ", res);
 
       if (!res.ok) {
         throw new Error("Failed to fetch data from Finnhub");
       }
+      
       setFetched(true);
       const data = await res.json();
       setResults(data.result || []);
@@ -69,17 +115,28 @@ export default function SearchStockPage() {
 
   const handleAddToWatchlist = async (stock: FinnhubSearchResult) => {
     const res = await fetch("/api/watchlist", {
-        method: "POST",
-        headers: { "Content-Type" : "application/json" },
-        // object literal ke andr sirf key value pair hi aa skti h.
-        body: JSON.stringify({ stockName : stock.description }),
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ stockName: stock.description }),
     });
-
-    console.log("Result: ", res);
 
     if(!res.ok){
       alert("Unable to put it in your watchlist");   
+    } else {
+      alert("Added to Watchlist");
     }
+  };
+
+  const clearSearch = () => {
+    setResults([]);
+    setFetched(false);
+    setQuery("");
+    setError(null);
+    setStockInfos({});
+  };
+
+  const getStockInfo = (symbol: string) => {
+    return stockInfos[symbol];
   };
 
   return (
@@ -96,11 +153,12 @@ export default function SearchStockPage() {
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="e.g. AAPL, INFY, Tesla"
+            disabled={loading}
           />
         </div>
         <Button onClick={handleSearch} disabled={loading}>
           {loading ? (
-            "Searching..."
+            <Loader2 className="h-4 w-4 animate-spin mr-2" />
           ) : (
             <>
               <Search className="mr-2 h-4 w-4" />
@@ -116,51 +174,127 @@ export default function SearchStockPage() {
         </div>
       )}
 
-      {results.length === 0 && !loading && !error && (
+      {results.length === 0 && !loading && !error && fetched && (
         <p className="text-sm text-muted-foreground">
-          No results yet. Try searching for a stock symbol or name.
+          No results found. Try different keywords.
         </p>
       )}
 
+      {results.length > 0 && (
+        <div className="mb-4">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={clearSearch}
+            className="mb-4"
+          >
+            Clear Results
+          </Button>
+        </div>
+      )}
+
       <div className="space-y-3">
-        {results.map((stock) => (
-          <Card key={stock.symbol} className="border border-gray-200 shadow-sm h-50">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0">
-              <div>
-                <CardTitle className="text-lg">
-                  {stock.displaySymbol || stock.symbol}
-                </CardTitle>
-                <CardDescription className="text-xs text-muted-foreground">
-                  {stock.description || "No description available"}
-                </CardDescription>
-              </div>
-              {stock.type && (
-                <span className="rounded-full bg-slate-100 px-2 py-1 text-xs text-slate-700">
-                  {stock.type}
-                </span>
-              )}
-            </CardHeader>
+        {results.map((stock) => {
+          const stockInfo = getStockInfo(stock.symbol);
+          return (
+            <Card key={stock.symbol} className="border border-gray-200 shadow-sm">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <div className="space-y-1">
+                  <CardTitle className="text-lg leading-tight">
+                    {stock.displaySymbol || stock.symbol}
+                  </CardTitle>
+                  <CardDescription className="text-xs text-muted-foreground max-w-md">
+                    {stock.description || "No description available"}
+                  </CardDescription>
+                </div>
+                {stock.type && (
+                  <span className="rounded-full bg-slate-100 px-2 py-1 text-xs text-slate-700">
+                    {stock.type}
+                  </span>
+                )}
+              </CardHeader>
 
-            <CardContent>
-              <p className="text-xs text-muted-foreground">
-                Symbol: <span className="font-medium">{stock.symbol}</span>
-              </p>
-            </CardContent>
+              <CardContent className="space-y-3 pt-0">
+                <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
+                  <span>Symbol:</span>
+                  <span className="font-mono font-medium bg-slate-100 px-2 py-1 rounded text-sm">
+                    {stock.symbol}
+                  </span>
+                </div>
 
-            <CardFooter className="flex justify-end">
-              <Button
-                size="sm"
-                onClick={() => handleAddToWatchlist(stock)}
-              >
-                Add to watchlist
-              </Button>
-            </CardFooter>
-          </Card>
-        ))}
-        {fetched && <Button onClick={() => {
-            setResults([]);
-            setFetched(false);
-        }}>Close</Button>}
+                {stockInfo?.loading ? (
+                  <div className="flex items-center space-x-2 text-sm text-muted-foreground py-4">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span>Loading stock information...</span>
+                  </div>
+                ) : stockInfo?.error ? (
+                  <div className="text-sm text-destructive py-3 px-3 bg-destructive/10 rounded-md border border-destructive/20">
+                    {stockInfo.error}
+                  </div>
+                ) : stockInfo?.data ? (
+                  <div className="p-4 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg border max-h-64 overflow-hidden">
+                    <div className="text-xs font-medium text-blue-800 mb-3 flex items-center gap-1">
+                      <Info className="h-3 w-3" />
+                      Stock Analysis
+                    </div>
+                    <div className="text-m leading-4 text-gray-800 max-h-48 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
+                      {typeof stockInfo.data === 'object' 
+                        ? JSON.stringify(stockInfo.data, null, 2)
+                            .split('\n')
+                            .map((line, idx) => (
+                              <span key={idx} className="block font-mono whitespace-pre">
+                                {line}
+                              </span>
+                            ))
+                        : stockInfo.data
+                      }
+                    </div>
+                  </div>
+                ) : (
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="w-full justify-start h-10 text-muted-foreground hover:text-foreground"
+                    onClick={() => getInfo(stock)}
+                  >
+                    <Info className="h-4 w-4 mr-2" />
+                    Get Stock Information
+                  </Button>
+                )}
+              </CardContent>
+
+              <CardFooter className="pt-0 border-t border-gray-100">
+                <div className="flex w-full gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1"
+                    onClick={() => handleAddToWatchlist(stock)}
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add to Watchlist
+                  </Button>
+                  {stockInfo?.data && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => {
+                        setStockInfos(prev => {
+                          const newInfos = { ...prev };
+                          delete newInfos[stock.symbol];
+                          return newInfos;
+                        });
+                      }}
+                      className="h-10 px-3"
+                    >
+                      Clear Info
+                    </Button>
+                  )}
+                </div>
+              </CardFooter>
+            </Card>
+          );
+        })}
       </div>
     </div>
   );
