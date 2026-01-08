@@ -10,7 +10,6 @@ export async function POST(request: NextRequest) {
     const body: RequestBody = await request.json();  
     const { stockName, description } = body;
 
-    // Gemini API call (same as before)
     const geminiResponse = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${process.env.GEMINI_API_KEY}`,
       {
@@ -40,7 +39,7 @@ export async function POST(request: NextRequest) {
       generatedAt: new Date().toISOString()
     };
 
-    return NextResponse.json(info, { status: 200 });  // NextResponse use kar
+    return NextResponse.json(info, { status: 200 });  
   } catch (error) {
     console.error('Error:', error);
     return NextResponse.json(
